@@ -7,12 +7,14 @@ LIBS=\
 	libmp/libmp.a\
 	libc/libc.a\
 	libsec/libsec.a\
+	third_party/boringssl/libcrypto.a\
+	third_party/boringssl/libssl.a
 
 OFILES=cpu.$O p9any.$O
 
 default: $(TARG)
 $(TARG): $(LIBS) $(OFILES)
-	$(CC) `pkg-config $(OPENSSL) --libs` $(LDFLAGS) -o $(TARG) $(OFILES) $(LIBS) $(LDADD)
+	$(CXX) -pthread -Lthird_party/boringssl -lcrypto -lssl $(LDFLAGS) -o $(TARG) $(OFILES) $(LIBS) $(LDADD)
 
 login_-dp9ik: $(LIBS) p9any.$O bsd.$O
 	$(CC) -o login_-dp9ik p9any.$O bsd.$O $(LIBS)
@@ -21,7 +23,7 @@ pam_p9.so: $(LIBS) p9any.$O pam.$O
 	$(CC) -shared -o pam_p9.so p9any.$O pam.$O $(LIBS)
 
 cpu.$O: cpu.c
-	$(CC) `pkg-config $(OPENSSL) --cflags` $(CFLAGS) cpu.c -o cpu.o
+	$(CC) -Ithird_party/boringssl/src/include $(CFLAGS) cpu.c -o cpu.o
 
 p9any.$O: p9any.c
 	$(CC) $(CFLAGS) p9any.c -o p9any.o
@@ -35,6 +37,7 @@ bsd.$O: bsd.c
 .PHONY: clean
 clean:
 	rm -f *.o */*.o */*.a *.a $(TARG) pam_p9.so login_-dp9ik
+	$(MAKE) -C third_party/boringssl clean
 
 .PHONY: libauthsrv/libauthsrv.a
 libauthsrv/libauthsrv.a:
@@ -51,3 +54,11 @@ libc/libc.a:
 .PHONY: libsec/libsec.a
 libsec/libsec.a:
 	(cd libsec; $(MAKE))
+
+.PHONY: third_party/boringssl/libcrypto.a
+third_party/boringssl/libcrypto.a:
+	(cd third_party/boringssl; $(MAKE) libcrypto.a)
+
+.PHONY: third_party/boringssl/libssl.a
+third_party/boringssl/libssl.a:
+	(cd third_party/boringssl; $(MAKE) libssl.a)
