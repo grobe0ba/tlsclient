@@ -14,7 +14,7 @@ OFILES=cpu.$O p9any.$O
 
 default: $(TARG)
 $(TARG): $(LIBS) $(OFILES)
-	$(CXX) -pthread -Lthird_party/boringssl -lcrypto -lssl $(LDFLAGS) -o $(TARG) $(OFILES) $(LIBS) $(LDADD)
+	$(CXX) -pthread -Lthird_party/boringssl -Wl,--start-group -lcrypto -lssl -Wl,--end-group $(LDFLAGS) -o $(TARG) $(OFILES) -Wl,--start-group $(LIBS) -Wl,--end-group $(LDADD)
 
 login_-dp9ik: $(LIBS) p9any.$O bsd.$O
 	$(CC) -o login_-dp9ik p9any.$O bsd.$O $(LIBS)
