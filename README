@@ -1,5 +1,13 @@
 tlsclient: tlsclient(1) for unix
 
+This is a fork of moody's tlsclient(1) (https://shithub.us/moody/tlsclient).
+The primary change is that BoringSSL is vendored into the build system, so
+it functions on any platform BoringSSL builds on. It also works fine with
+standalone compiler environments that have only libc and libc++.
+
+It has been tested on OpenBSD 7.0, RHEL 8.5/8.6, Ubunutu 20.04 on arm64, and a
+statically linked x86_64-linux-musl compiler environment.
+
 This repo contains:
 	9cpu: rcpu(1) on unix
 	tlsclient: tlsclient(1) on unix
@@ -23,13 +31,6 @@ Example:
 
 Building:
 	$ make tlsclient
-
-OpenBSD:
-	OpenBSD uses LibreSSL in place of OpenSSL. Unfortunately LibreSSL does
-	not have the PSK cipher suites for tlsclient. As such, the openssl11
-	package is required, and a wrapper recipe is provided:
-
-	$ make tlsclient.obsd
 
 OpenBSD Authentication:
 	Build:
