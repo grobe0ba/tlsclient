@@ -1,5 +1,4 @@
 ROOT=.
-
 include ./Make.config
 
 LIBS=\
@@ -10,23 +9,24 @@ LIBS=\
 	third_party/boringssl/libcrypto.a\
 	third_party/boringssl/libssl.a
 
+default: tlsclient
 OFILES=cpu.$O p9any.$O
 
 default: $(TARG)
 $(TARG): $(LIBS) $(OFILES)
-	$(CXX) -pthread -Lthird_party/boringssl -Wl,--start-group -lcrypto -lssl -Wl,--end-group $(LDFLAGS) -o $(TARG) $(OFILES) -Wl,--start-group $(LIBS) -Wl,--end-group $(LDADD)
+	$(CXX) -pthread -Lthird_party/boringssl $(LDFLAGS) -o $(TARG) $(OFILES) -Wl,--start-group $(LIBS) -Wl,--end-group $(LDADD)
 
-login_-dp9ik: $(LIBS) p9any.$O bsd.$O
-	$(CC) -o login_-dp9ik p9any.$O bsd.$O $(LIBS)
+login_-dp9ik: bsd.$O $(LIBS)
+	$(CC) -o $@ bsd.$O $(LIBS)
 
-pam_p9.so: $(LIBS) p9any.$O pam.$O
-	$(CC) -shared -o pam_p9.so p9any.$O pam.$O $(LIBS)
+pam_p9.so: pam.$O $(LIBS)
+	$(CC) -shared -o $@ pam.$O $(LIBS)
 
 cpu.$O: cpu.c
 	$(CC) -Ithird_party/boringssl/src/include $(CFLAGS) cpu.c -o cpu.o
 
-p9any.$O: p9any.c
-	$(CC) $(CFLAGS) p9any.c -o p9any.o
+%.$O: %.c
+	$(CC) $(CFLAGS) $< -o $@
 
 pam.$O: pam.c
 	$(CC) $(CFLAGS) pam.c -o pam.o
@@ -43,15 +43,12 @@ clean:
 libauthsrv/libauthsrv.a:
 	(cd libauthsrv; $(MAKE))
 
-.PHONY: libmp/libmp.a
 libmp/libmp.a:
 	(cd libmp; $(MAKE))
 
-.PHONY: libc/libc.a
 libc/libc.a:
 	(cd libc; $(MAKE))
 
-.PHONY: libsec/libsec.a
 libsec/libsec.a:
 	(cd libsec; $(MAKE))
 
@@ -67,6 +64,26 @@ linuxdist: tlsclient pam_p9.so 9cpu
 	tar cf tlsclient.tar tlsclient pam_p9.so 9cpu
 	gzip tlsclient.tar
 
-obsddist: tlsclient login_-dp9ik 9cpu
-	tar cf tlsclient-obsd.tar tlsclient 9cpu login_-dp9ik
-	gzip tlsclient-obsd.tar
+linux.tar.gz: tlsclient pam_p9.so tlsclient.1
+	tar cf - tlsclient pam_p9.so tlsclient.1 | gzip > $@
+
+tlsclient.obsd:
+	OPENSSL=eopenssl11 LDFLAGS="$(LDFLAGS) -Xlinker --rpath=/usr/local/lib/eopenssl11/" $(MAKE) tlsclient
+	mv tlsclient tlsclient.obsd
+
+obsd.tar.gz: tlsclient.obsd login_-dp9ik tlsclient.1
+	tar cf - tlsclient.obsd login_-dp9ik tlsclient.1 | gzip > $@
+
+.PHONY: tlsclient.install
+tlsclient.install: tlsclient tlsclient.1
+	cp tlsclient $(PREFIX)/bin
+	cp tlsclient.1 $(PREFIX)/man/man1/
+
+.PHONY: tlsclient.obsd.install
+tlsclient.obsd.install: tlsclient.obsd login_-dp9ik tlsclient.1
+	install tlsclient.obsd $(PREFIX)/bin/tlsclient
+	install tlsclient.1 $(PREFIX)/man/man1/
+	install -d $(PREFIX)/libexec/auth
+	install -g auth login_-dp9ik $(PREFIX)/libexec/auth/
+	install -d $(PREFIX)/libexec/git
+	install git-remote-hjgit $(PREFIX)/libexec/git
