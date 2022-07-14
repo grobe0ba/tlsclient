@@ -16,8 +16,8 @@ default: $(TARG)
 $(TARG): $(LIBS) $(OFILES)
 	$(CXX) -pthread -Lthird_party/boringssl $(LDFLAGS) -o $(TARG) $(OFILES) -Wl,--start-group $(LIBS) -Wl,--end-group $(LDADD)
 
-login_-dp9ik: bsd.$O $(LIBS)
-	$(CC) -o $@ bsd.$O $(LIBS)
+login_-dp9ik: p9any.$O bsd.$O $(LIBS)
+	$(CC) -o $@ p9any.$O bsd.$O $(LIBS)
 
 pam_p9.so: pam.$O $(LIBS)
 	$(CC) -shared -o $@ pam.$O $(LIBS)
