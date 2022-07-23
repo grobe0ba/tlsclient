@@ -1,6 +1,6 @@
 tlsclient: tlsclient(1) for unix
 
-This is a fork of moody's tlsclient(1) (https://shithub.us/moody/tlsclient).
+This is a fork of moody's tlsclient(1) (https://shithub.us/moody/tlsclient/HEAD/info.html).
 The primary change is that BoringSSL is vendored into the build system, so
 it functions on any platform BoringSSL builds on. It also works fine with
 standalone compiler environments that have only libc and libc++.
